@@ -24,7 +24,7 @@ parser.add_argument('-p', '--path',
 argv = vars(parser.parse_args())
 
 def video_comp(cam_num):
-    capture = cv2.VideoCapture(cam_num) #0 is the number of the cam, if using video file replace with path
+    capture = cv2.VideoCapture(cam_num)
     ref_frame_tmp = cv2.imread(argv["path"])
     ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
     ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
@@ -38,7 +38,7 @@ def video_comp(cam_num):
         #Score goes from -1 to 1 with 1 being 2 identical images
         #Diff contains the image difference between video and reference
         print("Score: {}".format(score))
-        if score != 1:
+        if score < 0.9:
             #threshold Diff to get the specific regions where the 2 images differ
             thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
             cnts = cv2.findCountours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
