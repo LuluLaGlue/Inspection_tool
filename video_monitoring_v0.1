@@ -10,23 +10,30 @@ import cv2
 import imutils
 import argparse
 import multiprocessing
+from datetime import datetime
 from skimage.measure import compare_ssim
 
 #Handle args on script start
 parser = argparse.ArgumentParser(description='Monitor camera feed')
-parser.add_argument("-n", "--number", type=int, required=True, help="Number of cameras to monitor")
-parser.add_argument('-p', '--path', required=True, help='Path to reference image')
+parser.add_argument("-n", "--number", type=int, 
+#                     required=True, 
+                    help="Number of cameras to monitor")
+parser.add_argument('-p', '--path', 
+#                     required=True, 
+                    help='Path to reference image')
 argv = vars(parser.parse_args())
 
 def video_comp(cam_num):
     capture = cv2.VideoCapture(cam_num) #0 is the number of the cam, if using video file replace with path
     ref_frame_tmp = cv2.imread(argv["path"])
     ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
-
+    ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
     while(True):
+        contours_circles = []
         ret, frame = capture.read()
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        (score, diff) = compare_ssim(ref_frame, frame_gray, full=True)
+        frame_smooth = cv2.bilateralFilter(frame_gray, 9, 75, 75)
+        (score, diff) = compare_ssim(ref_smooth, frame_smooth, full=True)
         diff = (diff * 255).astype("uint8")
         #Score goes from -1 to 1 with 1 being 2 identical images
         #Diff contains the image difference between video and reference
@@ -39,9 +46,21 @@ def video_comp(cam_num):
             #Drawing rectangle arround difference
             for i in cnts:
                 (x, y, w, h) = cv2.boundingRect(i)
-                cv2.rectangle(frame_gray, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                #cv2.rectangle(frame_smooth, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                aspect_ratio = float(w)/h
+                area = cv2.contourArea(i)
+                if (area < 18000) & aspect_ratio < 3.5):
+                    contours_circles.append(cnt)
+                    counting = len(countours_circles)
+                
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
+            cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-        cv2.imshow("Video Feed", frame_gray)
+        cv2.imshow("Video Feed", frame_smooth)
+        date = datetime.now()
+        cv2.imwrite("img/Default_"+str(date)+".png", draw)
+        
         #Stops loop on 'q' keypress
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -49,11 +68,13 @@ def video_comp(cam_num):
     capture.release()
     cv2.destroyAllWindows()
     
-i = 0
-cam_id = []
-while i < argv["number"]:
-    cam_id.append(i)
-    i++
+# i = 0
+# cam_id = []
+# while i < argv["number"]:
+#     cam_id.append(i)
+#     i++
 
-p = multiprocessing.Pool()
-p.map(video_comp, cam_id)
+# p = multiprocessing.Pool()
+# p.map(video_comp, cam_id)
+
+video_comp("rtsp://80.60.167.150:554/video")
