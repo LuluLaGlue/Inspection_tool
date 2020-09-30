@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+# coding: utf-8
+# Comparaison du flux video avec une image de reference
+# Par Lucien Sigayret
+# 30 - 09 - 2020
+# Version @0.1
+
+import numpy as np
+import cv2
+import imutils
+import argparse
+import multiprocessing
+from skimage.measure import compare_ssim
+
+#Handle args on script start
+parser = argparse.ArgumentParser(description='Monitor camera feed')
+parser.add_argument("-n", "--number", type=int, required=True, help="Number of cameras to monitor")
+parser.add_argument('-p', '--path', required=True, help='Path to reference image')
+argv = vars(parser.parse_args())
+
+def video_comp(cam_num):
+    capture = cv2.VideoCapture(cam_num) #0 is the number of the cam, if using video file replace with path
+    ref_frame_tmp = cv2.imread(argv["path"])
+    ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
+
+    while(True):
+        ret, frame = capture.read()
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        (score, diff) = compare_ssim(ref_frame, frame_gray, full=True)
+        diff = (diff * 255).astype("uint8")
+        #Score goes from -1 to 1 with 1 being 2 identical images
+        #Diff contains the image difference between video and reference
+        print("Score: {}".format(score))
+        if score != 1:
+            #threshold Diff to get the specific regions where the 2 images differ
+            thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+            cnts = cv2.findCountours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cnts = imutils.grab_countours(cnts)
+            #Drawing rectangle arround difference
+            for i in cnts:
+                (x, y, w, h) = cv2.boundingRect(i)
+                cv2.rectangle(frame_gray, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+        cv2.imshow("Video Feed", frame_gray)
+        #Stops loop on 'q' keypress
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    capture.release()
+    cv2.destroyAllWindows()
+    
+i = 0
+cam_id = []
+while i < argv["number"]:
+    cam_id.append(i)
+    i++
+
+p = multiprocessing.Pool()
+p.map(video_comp, cam_id)
