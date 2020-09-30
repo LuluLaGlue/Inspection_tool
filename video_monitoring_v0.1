@@ -13,15 +13,16 @@ import multiprocessing
 from datetime import datetime
 from skimage.measure import compare_ssim
 
-#Handle args on script start
-parser = argparse.ArgumentParser(description='Monitor camera feed')
-parser.add_argument("-n", "--number", type=int, 
-#                     required=True, 
-                    help="Number of cameras to monitor")
-parser.add_argument('-p', '--path', 
-#                     required=True, 
-                    help='Path to reference image')
-argv = vars(parser.parse_args())
+def arg_parser():
+    parser = argparse.ArgumentParser(description='Monitor camera feed')
+    parser.add_argument("-n", "--number", type=int, 
+    #                     required=True, 
+                        help="Number of cameras to monitor")
+    parser.add_argument('-p', '--path', 
+    #                     required=True, 
+                        help='Path to reference image')
+    argv = vars(parser.parse_args())
+    return argv
 
 def video_comp(cam_num):
     capture = cv2.VideoCapture(cam_num)
@@ -76,5 +77,5 @@ def video_comp(cam_num):
 
 # p = multiprocessing.Pool()
 # p.map(video_comp, cam_id)
-
+argv = arg_parser()
 video_comp("rtsp://80.60.167.150:554/video")
