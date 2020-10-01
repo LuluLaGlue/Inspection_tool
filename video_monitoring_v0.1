@@ -20,15 +20,12 @@ from matplotlib import pyplot as plt
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
     
-    parser.add_argument("-n", "--number", type=int, 
-    #                     required=True, 
-                        help="Number of cameras to monitor")
     parser.add_argument('-p', '--path', 
                         required=True, 
                         help='Path to reference image')
     parser.add_argument('-v', '--video',
                         required=True,
-                        help="Path to video feed")
+                        help="Path to video feed, if several feeds : feed1,feed2,feed3")
     parser.add_argument('-s', '--size',
                         required=True,
                         help="sizes of the reference image or video feed: width,height")
@@ -141,22 +138,12 @@ def video_comp(cam_num):
         del(exc_type, exc_value, exc_traceback)
         error_message(['Something went wrong on line {}.'.format(str(traceback_details["lineno"])), "Error type: {}".format(traceback_details["name"])])
 
-# ---------- IN CASE OF MULTIPLE CAMERAS ---------- #
-#When launching script use the -n option to set the #
-#total number of cameras.                           #
-#Decomment next lines and delete the last two ones. #
-# --------------------------------------------------#
-
-#Decomment the following lines
-# i = 0
-# cam_id = []
-# while i < argv["number"]:
-#     cam_id.append(i)
-#     i++
-# p = multiprocessing.Pool()
-# p.map(video_comp, cam_id)
-
-#Delete these two lines
 argv = arg_parser()
-video_comp(argv["video"])
+if len(argv["video"].split(',')) > 1:
+    argv["video"] = argv["video"].split(',')
+    p = multiprocessing.Pool()
+    p.map(video_comp,argv["video"])
+else:
+    video_comp(argv["video"])
+
 sys.exit(0)
