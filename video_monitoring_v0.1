@@ -5,7 +5,6 @@
 # 30 - 09 - 2020
 # Version @0.9
 
-import numpy as np
 import cv2
 import imutils
 import argparse
@@ -13,6 +12,7 @@ import os
 import sys
 import time
 import multiprocessing
+import numpy as np
 from datetime import datetime
 from skimage.metrics import structural_similarity
 from matplotlib import pyplot as plt
@@ -40,17 +40,28 @@ def arg_parser():
                        help="Production line speed in m/min")
 
     argv = vars(parser.parse_args())
-    argv["height"] = int(argv["size"].split(',')[1])
     argv["width"] = int(argv["size"].split(',')[0])
+    argv["height"] = int(argv["size"].split(',')[1])
     argv.pop('size')
     argv["meter"] = argv["meter"]/60
     print("Images will be saved in the "+argv["destination"]+" folder.")
     return argv
 
+def error_message(message):
+    i = 0
+    print('# ------------- ERROR ------------- #')
+    while i < len(message):
+        print(message[i])
+        i += 1
+    print('# --------- SCRIPT STOPPED --------- #')
+    sys.exit(1)
+
 def video_comp(cam_num):
     try:
         print("Connecting to camera feed...")
         capture = cv2.VideoCapture(cam_num)
+        if capture is None or not capture.isOpened():
+            error_message(["Unable to capture video feed/read video file: " + str(cam_num) + ".\nPlease check the -v argument."])
         print("Connection ok.")
         ref_frame_tmp = cv2.imread(argv["path"])
         ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
@@ -71,8 +82,6 @@ def video_comp(cam_num):
             #Diff contains the image difference between video and reference
             if score < 0.9:
                 print("Flaw detected with a score of: {}".format(score))
-                
-                #threshold Diff to get the specific regions where the 2 images differ
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cnts = imutils.grab_contours(cnts)
@@ -110,7 +119,7 @@ def video_comp(cam_num):
                     plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                 print("Image and histogram saved in " + argv["destination"])
                 print("Waiting for flaw to clear away...")
-                time.sleep(3/argv["meter"]) #Replace 1 by (filming distance (film length))/argv["meter"] to have the flaw  leave the camera view
+                time.sleep(3/argv["meter"]) #3 is the filmed distance of the monitored line
                 print("Continuing monitoring.")
 #             cv2.imshow("Video Feed", draw)
 
@@ -127,11 +136,7 @@ def video_comp(cam_num):
                             'name': exc_type.__name__,
                             }
         del(exc_type, exc_value, exc_traceback)
-        print('# ------------- ERROR ------------- #')
-        print('Something went wrong on line ' + str(traceback_details["lineno"]) + '.')
-        print("Error type: {}".format(traceback_details["name"]))
-        print('# --------- SCRIPT STOPPED --------- #')
-        sys.exit(1)
+        error_message(['Something went wrong on line ' + str(traceback_details["lineno"]) + '.', "Error type: {}".format(traceback_details["name"])])
 
 # ---------- IN CASE OF MULTIPLE CAMERAS ---------- #
 #When launching script use the -n option to set the #
