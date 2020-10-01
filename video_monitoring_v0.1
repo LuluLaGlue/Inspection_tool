@@ -53,18 +53,17 @@ def error_message(message):
 
 def video_comp(cam_num):
     try:
-        print("Connecting to camera feed...")
+        print("Connecting to camera feed {}...".format(cam_num))
         capture = cv2.VideoCapture(cam_num)
         if capture is None or not capture.isOpened():
             error_message(["Unable to capture video feed/read video file: {}.".format(str(cam_num)), "Please check the -v argument."])
             
-        print("Connection ok.")
+        print("Connection to {} ok.".format(cam_num))
         ref_frame_tmp = cv2.imread(argv["path"])
         ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
         ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
         ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
         del(ref_frame_tmp, ref_frame)
-        print("Beginning monitoring...")
         while(True):
             contours_circles = []
             ret, frame = capture.read()
@@ -105,7 +104,6 @@ def video_comp(cam_num):
                 cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 
                 date = datetime.now()
-                print("Saving image and histogram...")
                 if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
                     os.mkdir(argv["destination"] + "/Flaw_"+str(date))
                     cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
@@ -118,9 +116,7 @@ def video_comp(cam_num):
                     plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                     
                 print("Image and histogram saved in " + argv["destination"])
-                print("Waiting for flaw to clear away...")
                 time.sleep(3/argv["meter"]) #3 is the filmed distance of the monitored line
-                print("Continuing monitoring.")
 #             cv2.imshow("Video Feed", draw)
 
         capture.release()
@@ -138,6 +134,7 @@ def video_comp(cam_num):
         del(exc_type, exc_value, exc_traceback)
         error_message(['Something went wrong on line {}.'.format(str(traceback_details["lineno"])), "Error type: {}".format(traceback_details["name"])])
 
+print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
 argv = arg_parser()
 if len(argv["video"].split(',')) > 1:
     argv["video"] = argv["video"].split(',')
