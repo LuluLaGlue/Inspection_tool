@@ -9,6 +9,8 @@ import numpy as np
 import cv2
 import imutils
 import argparse
+import os
+import sys
 import multiprocessing
 from datetime import datetime
 from skimage.metrics import structural_similarity
@@ -24,61 +26,73 @@ def arg_parser():
     parser.add_argument('-v', '--video',
                         required=True,
                         help="Path to video feed")
-    parser.add_argument('-d', '--dimension',
+    parser.add_argument('-s', '--size',
                         required=True,
-                        help="Dimensions of the reference image or video feed: width,height")
+                        help="sizes of the reference image or video feed: width,height")
+    parser.add_argument('-d', '--destination',
+                       required=True,
+                       help="Path to the folder in which to save resulting images")
+
     argv = vars(parser.parse_args())
-    argv["height"] = int(argv["dimension"].split(',')[1])
-    argv["width"] = int(argv["dimension"].split(',')[0])
+    argv["height"] = int(argv["size"].split(',')[1])
+    argv["width"] = int(argv["size"].split(',')[0])
+    argv.pop('size')
+    print(argv)
     return argv
 
 def video_comp(cam_num):
-    capture = cv2.VideoCapture(cam_num)
-    ref_frame_tmp = cv2.imread(argv["path"])
-    ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
-    ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
-    ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
-    while(True):
-        contours_circles = []
-        ret, frame = capture.read()
-        frame = cv2.resize(frame, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        frame_smooth = cv2.bilateralFilter(frame_gray, 9, 75, 75)
-        (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
-        diff = (diff * 255).astype("uint8")
-        #Score goes from -1 to 1 with 1 being 2 identical images
-        #Diff contains the image difference between video and reference
-        print("Score: {}".format(score))
-        if score < 0.9:
-            #threshold Diff to get the specific regions where the 2 images differ
-            thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-            cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cnts = imutils.grab_contours(cnts)
+    try:
+        capture = cv2.VideoCapture(cam_num)
+        ref_frame_tmp = cv2.imread(argv["path"])
+        ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
+        ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
+        ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
+        while(True):
+            contours_circles = []
+            ret, frame = capture.read()
+            frame = cv2.resize(frame, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
+            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame_smooth = cv2.bilateralFilter(frame_gray, 9, 75, 75)
+            (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
+            diff = (diff * 255).astype("uint8")
+            #Score goes from -1 to 1 with 1 being 2 identical images
+            #Diff contains the image difference between video and reference
+            print("Score: {}".format(score))
+            if score < 0.9:
+                #threshold Diff to get the specific regions where the 2 images differ
+                thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+                cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                cnts = imutils.grab_contours(cnts)
 
-            #Drawing rectangle arround difference
-            for i in cnts:
-                (x, y, w, h) = cv2.boundingRect(i)
-                #cv2.rectangle(frame_smooth, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                aspect_ratio = float(w)/h
-                area = cv2.contourArea(i)
-#                 if (area < 18000) & (aspect_ratio < 3.5):
-                contours_circles.append(i)
-                counting = len(contours_circles)
+                #Drawing rectangle arround difference
+                for i in cnts:
+                    (x, y, w, h) = cv2.boundingRect(i)
+                    aspect_ratio = float(w)/h
+                    area = cv2.contourArea(i)
+    #                 if (area < 18000) & (aspect_ratio < 3.5):
+                    contours_circles.append(i)
+                    counting = len(contours_circles)
 
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
-            cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
+                cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-    #     cv2.imshow("Video Feed", draw)
-        date = datetime.now()
-        cv2.imwrite("img/Default_"+str(date)+".png", draw)
+        #     cv2.imshow("Video Feed", draw)
+            date = datetime.now()
+            if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
+                cv2.imwrite(argv["destination"]+"/Default_"+str(date)+".png", draw)
+            else:
+                os.mkdir(argv["destination"])
+                cv2.imwrite(argv["destination"]+"/Default_"+str(date)+".png", draw)
+            #Stops loop on 'q' keypress
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-        #Stops loop on 'q' keypress
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    capture.release()
-    cv2.destroyAllWindows()
+        capture.release()
+        cv2.destroyAllWindows()
+    except KeyboardInterrupt:
+        print('\nScript succesfully terminated by user. \nResulting images (if existing) can be found in the '+argv["destination"]+' folder.')
+        sys.exit(0)
     
 # i = 0
 # cam_id = []
