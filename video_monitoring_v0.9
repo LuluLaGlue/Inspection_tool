@@ -41,6 +41,17 @@ def arg_parser():
     argv["height"] = int(argv["size"].split(',')[1])
     argv.pop('size')
     argv["meter"] = argv["meter"]/60
+    if not os.path.exists(argv["destination"]) or not os.path.isdir(argv["destination"]):
+        print("Repository {} does not exist/is not valid.".format("destination"))
+        create = input("Do you wish to create it ? (yes/no)\n")
+        if create != "yes" and create!= "no":
+            create = input("Please enter yes or no: ")
+        if create == "yes":
+            os.mkdir(argv["destination"])
+            print("Repository created.")
+        else:
+            print("# --------- SCRIPT STOPPED --------- #")
+            sys.exit(0)
     print("Images will be saved in the "+argv["destination"]+" folder.")
     return argv
 
@@ -104,17 +115,9 @@ def video_comp(cam_num):
                 cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 
                 date = datetime.now()
-                if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
-                    os.mkdir(argv["destination"] + "/Flaw_"+str(date))
-                    cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
-                    plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
-                else:
-                    print("Creating destination folder...")
-                    os.mkdir(argv["destination"])
-                    os.mkdir(argv["destination"] + "/Flaw_"+str(date))
-                    cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
-                    plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
-                    
+                os.mkdir(argv["destination"] + "/Flaw_"+str(date))
+                cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
+                plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                 print("Image and histogram saved in " + argv["destination"])
                 time.sleep(3/argv["meter"]) #3 is the filmed distance of the monitored line
 #             cv2.imshow("Video Feed", draw)
