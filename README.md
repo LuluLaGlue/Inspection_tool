@@ -1,4 +1,4 @@
 # Inspection_tool
-Currently opening, video feed and comparing with reference file. Adding rectangle arround difference to outline default.
-
-Need to replace rectangle with true outline around default + Create histogramme for (among other) gray scale value + Save image when a default is located.
+Python script to compare a video feed/file frame by frame with an image reference.
+When a difference is detected, the algorithm outlines the difference, creates a grayscale histogram of the frame 
+and saves the resulting .pngs in a folder.
