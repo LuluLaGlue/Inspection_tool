@@ -14,6 +14,7 @@ import sys
 import multiprocessing
 from datetime import datetime
 from skimage.metrics import structural_similarity
+from matplotlib import pyplot as plt
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
@@ -79,18 +80,28 @@ def video_comp(cam_num):
 
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
-                #create histogram here
+                #Creating histogram
+                tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256])
+                plt.title('Grayscale Histogram')
+                plt.xlabel('Intensity')
+                plt.grid(True, which='both', axis='both', linestyle='--')
+                axes = plt.gca()
+                axes.set_xlim([0, 250])
+                axes.set_ylim([0, 10000])
+                
                 cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
                 date = datetime.now()
                 if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
                     os.mkdir(argv["destination"] + "/Flaw_"+str(date))
                     cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
+                    plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                 else:
                     print("Creating destination folder...")
                     os.mkdir(argv["destination"])
                     os.mkdir(argv["destination"] + "/Flaw_"+str(date))
                     cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
+                    plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                 print("Image saved in " + argv["destination"])
 #             cv2.imshow("Video Feed", draw)
 
