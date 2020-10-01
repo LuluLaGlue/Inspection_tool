@@ -17,6 +17,7 @@ from skimage.metrics import structural_similarity
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
+    
     parser.add_argument("-n", "--number", type=int, 
     #                     required=True, 
                         help="Number of cameras to monitor")
@@ -37,16 +38,19 @@ def arg_parser():
     argv["height"] = int(argv["size"].split(',')[1])
     argv["width"] = int(argv["size"].split(',')[0])
     argv.pop('size')
-    print(argv)
+    print("Images will be saved in the "+argv["destination"]+" folder.")
     return argv
 
 def video_comp(cam_num):
     try:
+        print("Connecting to camera feed...")
         capture = cv2.VideoCapture(cam_num)
+        print("Connection ok.")
         ref_frame_tmp = cv2.imread(argv["path"])
         ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
         ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
         ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
+        print("Beginning monitoring...")
         while(True):
             contours_circles = []
             ret, frame = capture.read()
@@ -57,8 +61,8 @@ def video_comp(cam_num):
             diff = (diff * 255).astype("uint8")
             #Score goes from -1 to 1 with 1 being 2 identical images
             #Diff contains the image difference between video and reference
-            print("Score: {}".format(score))
             if score < 0.9:
+                print("Flaw detected with a score of: {}".format(score))
                 #threshold Diff to get the specific regions where the 2 images differ
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -82,11 +86,10 @@ def video_comp(cam_num):
             if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
                 cv2.imwrite(argv["destination"]+"/Default_"+str(date)+".png", draw)
             else:
+                print("Creating destination folder...")
                 os.mkdir(argv["destination"])
                 cv2.imwrite(argv["destination"]+"/Default_"+str(date)+".png", draw)
-            #Stops loop on 'q' keypress
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            print("Image saved in " + argv["destination"])
 
         capture.release()
         cv2.destroyAllWindows()
