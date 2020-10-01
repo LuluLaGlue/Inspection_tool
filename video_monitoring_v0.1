@@ -79,17 +79,20 @@ def video_comp(cam_num):
 
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
+                #create histogram here
                 cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-        #     cv2.imshow("Video Feed", draw)
-            date = datetime.now()
-            if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
-                cv2.imwrite(argv["destination"]+"/Default_"+str(date)+".png", draw)
-            else:
-                print("Creating destination folder...")
-                os.mkdir(argv["destination"])
-                cv2.imwrite(argv["destination"]+"/Default_"+str(date)+".png", draw)
-            print("Image saved in " + argv["destination"])
+                date = datetime.now()
+                if os.path.exists(argv["destination"]) & os.path.isdir(argv["destination"]):
+                    os.mkdir(argv["destination"] + "/Flaw_"+str(date))
+                    cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
+                else:
+                    print("Creating destination folder...")
+                    os.mkdir(argv["destination"])
+                    os.mkdir(argv["destination"] + "/Flaw_"+str(date))
+                    cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
+                print("Image saved in " + argv["destination"])
+#             cv2.imshow("Video Feed", draw)
 
         capture.release()
         cv2.destroyAllWindows()
