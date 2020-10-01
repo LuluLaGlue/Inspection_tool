@@ -10,7 +10,6 @@ import cv2
 import imutils
 import argparse
 import multiprocessing
-import os
 from datetime import datetime
 from skimage.metrics import structural_similarity
 
@@ -20,15 +19,17 @@ def arg_parser():
     #                     required=True, 
                         help="Number of cameras to monitor")
     parser.add_argument('-p', '--path', 
-    #                     required=True, 
+                        required=True, 
                         help='Path to reference image')
-    parser.add_argument('-w', '--width',
+    parser.add_argument('-v', '--video',
                         required=True,
-                        help='Width of both frames')
-    parser.add_argument('-h', '--height',
-                       required=True,
-                       help="Height of both frames")
+                        help="Path to video feed")
+    parser.add_argument('-d', '--dimension',
+                        required=True,
+                        help="Dimensions of the reference image or video feed: width,height")
     argv = vars(parser.parse_args())
+    argv["height"] = int(argv["dimension"].split(',')[1])
+    argv["width"] = int(argv["dimension"].split(',')[0])
     return argv
 
 def video_comp(cam_num):
@@ -60,18 +61,18 @@ def video_comp(cam_num):
                 #cv2.rectangle(frame_smooth, (x, y), (x + w, y + h), (0, 0, 255), 2)
                 aspect_ratio = float(w)/h
                 area = cv2.contourArea(i)
-                if (area < 18000) & (aspect_ratio < 3.5):
-                    contours_circles.append(i)
-                    counting = len(contours_circles)
+#                 if (area < 18000) & (aspect_ratio < 3.5):
+                contours_circles.append(i)
+                counting = len(contours_circles)
 
             font = cv2.FONT_HERSHEY_SIMPLEX
             draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
             cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-        cv2.imshow("Video Feed", draw)
+    #     cv2.imshow("Video Feed", draw)
         date = datetime.now()
-        cv2.imwrite("Default_"+str(date)+".png", draw)
-        
+        cv2.imwrite("img/Default_"+str(date)+".png", draw)
+
         #Stops loop on 'q' keypress
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -88,4 +89,4 @@ def video_comp(cam_num):
 # p = multiprocessing.Pool()
 # p.map(video_comp, cam_id)
 argv = arg_parser()
-video_comp("rtsp://80.60.167.150:554/video")
+video_comp(argv["video"])
