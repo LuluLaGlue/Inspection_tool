@@ -22,19 +22,25 @@ def arg_parser():
     parser.add_argument('-p', '--path', 
     #                     required=True, 
                         help='Path to reference image')
+    parser.add_argument('-w', '--width',
+                        required=True,
+                        help='Width of both frames')
+    parser.add_argument('-h', '--height',
+                       required=True,
+                       help="Height of both frames")
     argv = vars(parser.parse_args())
     return argv
 
 def video_comp(cam_num):
     capture = cv2.VideoCapture(cam_num)
     ref_frame_tmp = cv2.imread(argv["path"])
-    ref_frame_tmp = cv2.resize(ref_frame_tmp, (327, 440), interpolation = cv2.INTER_AREA)
+    ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
     ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
     ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
     while(True):
         contours_circles = []
         ret, frame = capture.read()
-        frame = cv2.resize(frame, (327, 440), interpolation = cv2.INTER_AREA)
+        frame = cv2.resize(frame, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame_smooth = cv2.bilateralFilter(frame_gray, 9, 75, 75)
         (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
