@@ -10,8 +10,9 @@ import cv2
 import imutils
 import argparse
 import multiprocessing
+import os
 from datetime import datetime
-from skimage.measure import compare_ssim
+from skimage.metrics import structural_similarity
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
@@ -27,14 +28,16 @@ def arg_parser():
 def video_comp(cam_num):
     capture = cv2.VideoCapture(cam_num)
     ref_frame_tmp = cv2.imread(argv["path"])
+    ref_frame_tmp = cv2.resize(ref_frame_tmp, (327, 440), interpolation = cv2.INTER_AREA)
     ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
     ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
     while(True):
         contours_circles = []
         ret, frame = capture.read()
+        frame = cv2.resize(frame, (327, 440), interpolation = cv2.INTER_AREA)
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame_smooth = cv2.bilateralFilter(frame_gray, 9, 75, 75)
-        (score, diff) = compare_ssim(ref_smooth, frame_smooth, full=True)
+        (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
         diff = (diff * 255).astype("uint8")
         #Score goes from -1 to 1 with 1 being 2 identical images
         #Diff contains the image difference between video and reference
@@ -42,25 +45,26 @@ def video_comp(cam_num):
         if score < 0.9:
             #threshold Diff to get the specific regions where the 2 images differ
             thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-            cnts = cv2.findCountours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cnts = imutils.grab_countours(cnts)
+            cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cnts = imutils.grab_contours(cnts)
+
             #Drawing rectangle arround difference
             for i in cnts:
                 (x, y, w, h) = cv2.boundingRect(i)
                 #cv2.rectangle(frame_smooth, (x, y), (x + w, y + h), (0, 0, 255), 2)
                 aspect_ratio = float(w)/h
                 area = cv2.contourArea(i)
-                if (area < 18000) & aspect_ratio < 3.5):
-                    contours_circles.append(cnt)
-                    counting = len(countours_circles)
-                
+                if (area < 18000) & (aspect_ratio < 3.5):
+                    contours_circles.append(i)
+                    counting = len(contours_circles)
+
             font = cv2.FONT_HERSHEY_SIMPLEX
             draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
             cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-        cv2.imshow("Video Feed", frame_smooth)
+        cv2.imshow("Video Feed", draw)
         date = datetime.now()
-        cv2.imwrite("img/Default_"+str(date)+".png", draw)
+        cv2.imwrite("Default_"+str(date)+".png", draw)
         
         #Stops loop on 'q' keypress
         if cv2.waitKey(1) & 0xFF == ord('q'):
