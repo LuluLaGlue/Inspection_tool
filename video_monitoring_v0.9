@@ -25,7 +25,7 @@ def arg_parser():
                         help='Path to reference image')
     parser.add_argument('-v', '--video',
                         required=True,
-                        help="Path to video feed, if several feeds : feed1,feed2,feed3")
+                        help="Path to video feed, if -m is set to true separate the different feeds with a \',\' : feed1,feed2,feed3")
     parser.add_argument('-d', '--dimension',
                         required=True,
                         help="dimensions of the reference image or video feed: width,height")
@@ -34,7 +34,9 @@ def arg_parser():
                        help="Path to the folder in which to save resulting images")
     parser.add_argument('-s', '--speed', type=int,
                        required=True,
-                       help="Production line speed in m/min")
+                       help="Production line speed in m/min. Integer.")
+    parser.add_argument('-m', '--multi', type=bool,
+                       default=False, help="If more than one camera feed is used, must be set to True ? Boolean, Default=False")
 
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
@@ -159,13 +161,14 @@ try:
     print("Script started: {}".format(str(tz_start)))
     print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
     argv = arg_parser()
-    argv["video"] = argv["video"].split(',')
+    
 
-    if len(argv["video"]) > 1:
+    if argv["multi"] == True:
+        argv["video"] = argv["video"].split(',')
         p = multiprocessing.Pool()
         p.map(video_comp,argv["video"])
     else:
-        video_comp(argv["video"][0])
+        video_comp(argv["video"])
 
     sys.exit(0)
 except KeyboardInterrupt:
