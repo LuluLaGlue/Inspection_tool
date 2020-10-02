@@ -17,40 +17,6 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity
 
-def error_message(message):
-    print('# ------------- ERROR ------------- #')
-    for i in message:
-        print(i)
-    print('# --------- SCRIPT STOPPED --------- #')
-    tz_end = datetime.now()
-    print("Script stopped: {}".format(str(tz_end)))
-    sys.exit(1)
-
-def keyboard_stop(folder):
-    print('\n# ------------- STOP ------------- #')
-    print('Script succesfully terminated by user. \nResulting images (if existing) can be found in the {} folder.'.format(folder))
-    tz_end = datetime.now()
-    print("Script ended: {}".format(str(tz_end)))
-    sys.exit(0)
-
-def repository_create(folder):
-    if not os.path.exists(folder) or not os.path.isdir(folder):
-        print("Repository {} does not exist/is not valid.".format(folder))
-        create = input("Do you wish to create it ? (yes/no)\n").lower()
-        if create != "yes" and create != "no" and create != "y" and create != "n":
-            create = input("Please enter yes or no: ").lower()
-        if create == "yes" or create == "y":
-            try:
-                os.mkdir(folder)
-                print("Repository created.")
-            except FileNotFoundError:
-                error_message(["Repository name {} is not valid.".format(folder)])
-        else:
-            print("# --------- SCRIPT STOPPED --------- #")
-            tz_end = datetime.now()
-            print("Script stopped: {}".format(str(tz_end)))
-            sys.exit(0)
-
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
     
@@ -75,7 +41,28 @@ def arg_parser():
     argv["height"] = int(argv["dimension"].split(',')[1])
     argv.pop('dimension')
     argv["speed"] = argv["speed"]/60
-    repository_create(argv["folder"])
+    if not os.path.exists(argv["folder"]) or not os.path.isdir(argv["folder"]):
+        print("Repository {} does not exist/is not valid.".format(argv["folder"]))
+        create = input("Do you wish to create it ? (yes/no)\n").lower()
+        if create != "yes" and create != "no" and create != "y" and create != "n":
+            create = input("Please enter yes or no: ").lower()
+        if create == "yes" or create == "y":
+            try:
+                os.mkdir(argv["folder"])
+                print("Repository created.")
+            except FileNotFoundError:
+                print('# ------------- ERROR ------------- #')
+                print("Repository name {} is not valid.".format(argv["folder"]))
+                print('# --------- SCRIPT STOPPED --------- #')
+                tz_end = datetime.now()
+                print("Script stopped: {}".format(str(tz_end)))
+                sys.exit(1)
+                
+        else:
+            print("# --------- SCRIPT STOPPED --------- #")
+            tz_end = datetime.now()
+            print("Script stopped: {}".format(str(tz_end)))
+            sys.exit(0)
     print("Images will be saved in the "+argv["folder"]+" folder.")
     return argv
 
@@ -84,7 +71,13 @@ def video_comp(cam_num):
         print("Connecting to camera feed {}...".format(cam_num))
         capture = cv2.VideoCapture(cam_num)
         if capture is None or not capture.isOpened():
-            error_message(["Unable to capture video feed/read video file: {}.".format(str(cam_num)), "Please check the -v argument."])
+            print('# ------------- ERROR ------------- #')
+            print("Unable to capture video feed/read video file: {}.".format(str(cam_num)))
+            print("Please check the -v argument")
+            print('# --------- SCRIPT STOPPED --------- #')
+            tz_end = datetime.now()
+            print("Script stopped: {}".format(str(tz_end)))
+            sys.exit(1)
             
         print("Connection to {} ok.".format(cam_num))
         print("# -------------------------------- #")
@@ -121,13 +114,12 @@ def video_comp(cam_num):
                     counting = len(contours_circles)
             
                 #Creating histogram
-                tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256])
+                tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='grey', histtype='step')
                 plt.title('Grayscale Histogram')
-                plt.xlabel('Intensity')
+                plt.ylabel('Intensity')
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
                 axes.set_xlim([0, 250])
-                axes.set_ylim([0, 10000])
                 
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
@@ -146,14 +138,24 @@ def video_comp(cam_num):
         cv2.destroyAllWindows()
 
     except KeyboardInterrupt:
-        keyboard_stop(argv["folder"])
+        print('\n# ------------- STOP ------------- #')
+        print('Script succesfully terminated by user. \nResulting images (if existing) can be found in the {} folder.'.format(argv["folder"]))
+        tz_end = datetime.now()
+        print("Script ended: {}".format(str(tz_end)))
+        sys.exit(0)
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback_details = {'lineno': exc_traceback.tb_lineno,
                             'name': exc_type.__name__,
                             }
         del(exc_type, exc_value, exc_traceback)
-        error_message(['Something went wrong on line {}.'.format(str(traceback_details["lineno"])), "Error type: {}".format(traceback_details["name"])])
+        print('# ------------- ERROR ------------- #')
+        print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
+        print("Error type: {}".format(traceback_details["name"]))
+        print('# --------- SCRIPT STOPPED --------- #')
+        tz_end = datetime.now()
+        print("Script stopped: {}".format(str(tz_end)))
+        sys.exit(1)
 try:
     tz_start = datetime.now()
     print("Script started: {}".format(str(tz_start)))
@@ -170,6 +172,14 @@ try:
     sys.exit(0)
 except KeyboardInterrupt:
     try:
-        keyboard_stop(argv["folder"])
+        print('\n# ------------- STOP ------------- #')
+        print('Script succesfully terminated by user. \nResulting images (if existing) can be found in the {} folder.'.format(argv["folder"]))
+        tz_end = datetime.now()
+        print("Script ended: {}".format(str(tz_end)))
+        sys.exit(0)
     except NameError:
-        keyboard_stop("destination")
+        print('\n# ------------- STOP ------------- #')
+        print('Script succesfully terminated by user. \nResulting images (if existing) can be found in the {} folder.'.format("destination"))
+        tz_end = datetime.now()
+        print("Script ended: {}".format(str(tz_end)))
+        sys.exit(0)
