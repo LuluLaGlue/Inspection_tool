@@ -65,7 +65,7 @@ def arg_parser():
             tz_end = datetime.now()
             print("Script stopped: {}".format(str(tz_end)))
             sys.exit(0)
-    print("Images will be saved in the "+argv["folder"]+" folder.")
+    print("Images will be saved in the {} folder.".format(argv["folder"]))
     return argv
 
 def video_comp(cam_num):
@@ -118,17 +118,17 @@ def video_comp(cam_num):
                 plt.ylabel('Intensity')
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
-                axes.set_xlim([0, 250])
+                axes.set_xlim([0, 275])
                 
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
-                cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                cv2.putText(draw, "Number of defects: {}".format(str(counting)), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 
                 date = datetime.now()
-                os.mkdir(argv["folder"] + "/Flaw_"+str(date))
-                cv2.imwrite(argv["folder"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
-                plt.savefig(argv["folder"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
-                print("Image and histogram saved in " + argv["folder"])
+                os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
+                cv2.imwrite("{0}/Flaw_{1}/Photo_{1}.png".format(argv["folder"], str(date)), draw)
+                plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
+                print("Image and histogram saved in {}.".format(argv["folder"]))
                 print("# -------------------------------- #")
                 sleep_end = datetime.now()
                 sleep_time = (3/argv["speed"]) - (sleep_end - sleep_start).total_seconds()
