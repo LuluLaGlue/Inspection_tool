@@ -3,7 +3,7 @@
 # Comparaison de flux video avec une image de reference
 # Par Lucien Sigayret
 # 30 - 09 - 2020
-# Version @0.9
+# Version @1.0
 
 import os
 import sys
@@ -36,7 +36,7 @@ def arg_parser():
                        required=True,
                        help="Production line speed in m/min. Integer.")
     parser.add_argument('-m', '--multi', type=bool,
-                       default=False, help="If more than one camera feed is used, must be set to True ? Boolean, Default=False")
+                       default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
 
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
