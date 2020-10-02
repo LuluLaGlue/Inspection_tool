@@ -8,6 +8,7 @@
 import os
 import sys
 import cv2
+import time
 import imutils
 import argparse
 import numpy as np
@@ -68,18 +69,17 @@ def arg_parser():
     return argv
 
 def video_comp(cam_num):
+    print("Connecting to camera feed {}...".format(cam_num))
+    capture = cv2.VideoCapture(cam_num)
+    if capture is None or not capture.isOpened():
+        print('# ------------- ERROR ------------- #')
+        print("Unable to capture video feed/read video file: {}.".format(str(cam_num)))
+        print("Please check the -v argument")
+        print('# --------- SCRIPT STOPPED --------- #')
+        tz_end = datetime.now()
+        print("Script stopped: {}".format(str(tz_end)))
+        sys.exit(1)
     try:
-        print("Connecting to camera feed {}...".format(cam_num))
-        capture = cv2.VideoCapture(cam_num)
-        if capture is None or not capture.isOpened():
-            print('# ------------- ERROR ------------- #')
-            print("Unable to capture video feed/read video file: {}.".format(str(cam_num)))
-            print("Please check the -v argument")
-            print('# --------- SCRIPT STOPPED --------- #')
-            tz_end = datetime.now()
-            print("Script stopped: {}".format(str(tz_end)))
-            sys.exit(1)
-            
         print("Connection to {} ok.".format(cam_num))
         print("# -------------------------------- #")
         ref_frame_tmp = cv2.imread(argv["path"])
@@ -134,13 +134,17 @@ def video_comp(cam_num):
                 print("Image and histogram saved in " + argv["folder"])
                 print("# -------------------------------- #")
                 sleep_end = datetime.now()
-                time.sleep((3/argv["speed"]) - (sleep_end - sleep_start).total_seconds())#3 is the filmed distance of the monitored line
+                sleep_time = (3/argv["speed"]) - (sleep_end - sleep_start).total_seconds()
+                if sleep_time > 0:
+                    time.sleep(sleep_time)#3 is the filmed distance of the monitored line
 #             cv2.imshow("Video Feed", draw)
 
         capture.release()
         cv2.destroyAllWindows()
 
     except KeyboardInterrupt:
+        capture.release()
+        cv2.destroyAllWindows()
         raise
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -153,6 +157,8 @@ def video_comp(cam_num):
         print("Error type: {}".format(traceback_details["name"]))
         print('# --------- SCRIPT STOPPED --------- #')
         tz_end = datetime.now()
+        capture.release()
+        cv2.destroyAllWindows()
         print("Script stopped: {}".format(str(tz_end)))
         sys.exit(1)
 try:
