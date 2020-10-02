@@ -12,6 +12,7 @@ import time
 import imutils
 import argparse
 import numpy as np
+import pandas as pd
 import multiprocessing
 from datetime import datetime
 from matplotlib import pyplot as plt
@@ -111,6 +112,11 @@ def video_comp(cam_num):
                     counting = len(contours_circles)
             
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
+                df = pd.DataFrame(tmp_hist)
+                df = df.transpose()
+                df = df.rename(columns={0: 'y', 1: 'x'})
+                df = df.set_index('x')
+                del df[2]
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
                 axes.set_xlim([0, 275])
@@ -119,8 +125,10 @@ def video_comp(cam_num):
                 cv2.putText(draw, "Number of defects: {}".format(str(counting)), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 date = datetime.now()
                 os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
+                df.to_csv("{0}/Flaw_{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=True, sep=';')
                 cv2.imwrite("{0}/Flaw_{1}/Photo_{1}.png".format(argv["folder"], str(date)), draw)
-                plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
+#                 plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
+                del tmp_hist
                 print("Image and histogram saved in {}.".format(argv["folder"]))
                 print("# -------------------------------- #")
                 sleep_end = datetime.now()
@@ -135,21 +143,21 @@ def video_comp(cam_num):
         capture.release()
         cv2.destroyAllWindows()
         raise
-    except Exception as e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback_details = {'lineno': exc_traceback.tb_lineno,
-                            'name': exc_type.__name__,
-                            }
-        del(exc_type, exc_value, exc_traceback)
-        print('# ------------- ERROR ------------- #')
-        print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
-        print("Error type: {}".format(traceback_details["name"]))
-        print('# --------- SCRIPT STOPPED --------- #')
-        tz_end = datetime.now()
-        capture.release()
-        cv2.destroyAllWindows()
-        print("Script stopped: {}".format(str(tz_end)))
-        sys.exit(1)
+#     except Exception as e:
+#         exc_type, exc_value, exc_traceback = sys.exc_info()
+#         traceback_details = {'lineno': exc_traceback.tb_lineno,
+#                             'name': exc_type.__name__,
+#                             }
+#         del(exc_type, exc_value, exc_traceback)
+#         print('# ------------- ERROR ------------- #')
+#         print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
+#         print("Error type: {}".format(traceback_details["name"]))
+#         print('# --------- SCRIPT STOPPED --------- #')
+#         tz_end = datetime.now()
+#         capture.release()
+#         cv2.destroyAllWindows()
+#         print("Script stopped: {}".format(str(tz_end)))
+#         sys.exit(1)
 
 try:
     tz_start = datetime.now()
