@@ -17,6 +17,15 @@ from datetime import datetime
 from skimage.metrics import structural_similarity
 from matplotlib import pyplot as plt
 
+def error_message(message):
+    print('# ------------- ERROR ------------- #')
+    for i in message:
+        print(i)
+    print('# --------- SCRIPT STOPPED --------- #')
+    tz_end = datetime.now()
+    print("Script stopped: {}".format(str(tz_end)))
+    sys.exit(1)
+
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
     
@@ -42,13 +51,16 @@ def arg_parser():
     argv.pop('size')
     argv["meter"] = argv["meter"]/60
     if not os.path.exists(argv["destination"]) or not os.path.isdir(argv["destination"]):
-        print("Repository {} does not exist/is not valid.".format("destination"))
+        print("Repository {} does not exist/is not valid.".format(argv["destination"]))
         create = input("Do you wish to create it ? (yes/no)\n")
         if create != "yes" and create!= "no":
             create = input("Please enter yes or no: ")
         if create == "yes":
-            os.mkdir(argv["destination"])
-            print("Repository created.")
+            try:
+                os.mkdir(argv["destination"])
+                print("Repository created.")
+            except FileNotFoundError:
+                error_message(["Repository name {} is not valid.".format(argv["destination"])])
         else:
             print("# --------- SCRIPT STOPPED --------- #")
             tz_end = datetime.now()
@@ -56,15 +68,6 @@ def arg_parser():
             sys.exit(0)
     print("Images will be saved in the "+argv["destination"]+" folder.")
     return argv
-
-def error_message(message):
-    print('# ------------- ERROR ------------- #')
-    for i in message:
-        print(i)
-    print('# --------- SCRIPT STOPPED --------- #')
-    tz_end = datetime.now()
-    print("Script stopped: {}".format(str(tz_end)))
-    sys.exit(1)
 
 def video_comp(cam_num):
     try:
@@ -74,11 +77,13 @@ def video_comp(cam_num):
             error_message(["Unable to capture video feed/read video file: {}.".format(str(cam_num)), "Please check the -v argument."])
             
         print("Connection to {} ok.".format(cam_num))
+        print("# -------------------------------- #")
         ref_frame_tmp = cv2.imread(argv["path"])
         ref_frame_tmp = cv2.resize(ref_frame_tmp, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
         ref_frame = cv2.cvtColor(ref_frame_tmp, cv2.COLOR_BGR2GRAY)
         ref_smooth = cv2.bilateralFilter(ref_frame, 9, 75, 75)
         del(ref_frame_tmp, ref_frame)
+        argv.pop("video")
         while(True):
             contours_circles = []
             ret, frame = capture.read()
@@ -123,6 +128,7 @@ def video_comp(cam_num):
                 cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
                 plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                 print("Image and histogram saved in " + argv["destination"])
+                print("# -------------------------------- #")
                 time.sleep(3/argv["meter"]) #3 is the filmed distance of the monitored line
 #             cv2.imshow("Video Feed", draw)
 
@@ -147,11 +153,12 @@ tz_start = datetime.now()
 print("Script started: {}".format(str(tz_start)))
 print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
 argv = arg_parser()
-if len(argv["video"].split(',')) > 1:
-    argv["video"] = argv["video"].split(',')
+argv["video"] = argv["video"].split(',')
+
+if len(argv["video"]) > 1:
     p = multiprocessing.Pool()
     p.map(video_comp,argv["video"])
 else:
-    video_comp(argv["video"])
+    video_comp(argv["video"][0])
 
 sys.exit(0)
