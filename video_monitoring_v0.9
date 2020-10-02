@@ -88,6 +88,7 @@ def video_comp(cam_num):
         del(ref_frame_tmp, ref_frame)
         argv.pop("video")
         while(True):
+            sleep_start = datetime.now()
             contours_circles = []
             ret, frame = capture.read()
             frame = cv2.resize(frame, (argv["width"], argv["height"]), interpolation = cv2.INTER_AREA)
@@ -131,18 +132,15 @@ def video_comp(cam_num):
                 plt.savefig(argv["folder"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
                 print("Image and histogram saved in " + argv["folder"])
                 print("# -------------------------------- #")
-                time.sleep(3/argv["speed"]) #3 is the filmed distance of the monitored line
+                sleep_end = datetime.now()
+                time.sleep((3/argv["speed"]) - (sleep_end - sleep_start).total_seconds())#3 is the filmed distance of the monitored line
 #             cv2.imshow("Video Feed", draw)
 
         capture.release()
         cv2.destroyAllWindows()
 
     except KeyboardInterrupt:
-        print('\n# ------------- STOP ------------- #')
-        print('Script succesfully terminated by user. \nResulting images (if existing) can be found in the {} folder.'.format(argv["folder"]))
-        tz_end = datetime.now()
-        print("Script ended: {}".format(str(tz_end)))
-        sys.exit(0)
+        raise
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback_details = {'lineno': exc_traceback.tb_lineno,
