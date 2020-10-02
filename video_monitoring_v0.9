@@ -115,7 +115,7 @@ def video_comp(cam_num):
                     counting = len(contours_circles)
             
                 #Creating histogram
-                tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='grey', histtype='step')
+                tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
                 plt.title('Grayscale Histogram')
                 plt.ylabel('Intensity')
                 plt.grid(True, which='both', axis='both', linestyle='--')
