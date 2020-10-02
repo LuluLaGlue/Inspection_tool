@@ -19,7 +19,6 @@ from skimage.metrics import structural_similarity
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Monitor camera feed')
-    
     parser.add_argument('-p', '--path', 
                         required=True, 
                         help='Path to reference image')
@@ -35,9 +34,7 @@ def arg_parser():
     parser.add_argument('-s', '--speed', type=int,
                        required=True,
                        help="Production line speed in m/min. Integer.")
-    parser.add_argument('-m', '--multi',
-                       default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
-
+    parser.add_argument('-m', '--multi', default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
     argv["height"] = int(argv["dimension"].split(',')[1])
@@ -59,12 +56,12 @@ def arg_parser():
                 tz_end = datetime.now()
                 print("Script stopped: {}".format(str(tz_end)))
                 sys.exit(1)
-                
         else:
             print("# --------- SCRIPT STOPPED --------- #")
             tz_end = datetime.now()
             print("Script stopped: {}".format(str(tz_end)))
             sys.exit(0)
+
     print("Images will be saved in the {} folder.".format(argv["folder"]))
     return argv
 
@@ -79,6 +76,7 @@ def video_comp(cam_num):
         tz_end = datetime.now()
         print("Script stopped: {}".format(str(tz_end)))
         sys.exit(1)
+
     try:
         print("Connection to {} ok.".format(cam_num))
         print("# -------------------------------- #")
@@ -98,7 +96,6 @@ def video_comp(cam_num):
             (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
             diff = (diff * 255).astype("uint8")
             del(frame_gray)
-
             if score < 0.9:
                 print("Flaw detected with a score of: {}".format(round(score, 5)))
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
@@ -114,16 +111,12 @@ def video_comp(cam_num):
                     counting = len(contours_circles)
             
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
-                plt.title('Grayscale Histogram')
-                plt.ylabel('Intensity')
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
                 axes.set_xlim([0, 275])
-                
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
                 cv2.putText(draw, "Number of defects: {}".format(str(counting)), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
-                
                 date = datetime.now()
                 os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
                 cv2.imwrite("{0}/Flaw_{1}/Photo_{1}.png".format(argv["folder"], str(date)), draw)
@@ -138,7 +131,6 @@ def video_comp(cam_num):
 
         capture.release()
         cv2.destroyAllWindows()
-
     except KeyboardInterrupt:
         capture.release()
         cv2.destroyAllWindows()
@@ -158,12 +150,12 @@ def video_comp(cam_num):
         cv2.destroyAllWindows()
         print("Script stopped: {}".format(str(tz_end)))
         sys.exit(1)
+
 try:
     tz_start = datetime.now()
     print("Script started: {}".format(str(tz_start)))
     print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
     argv = arg_parser()
-    
     if argv["multi"] == "True":
         argv["video"] = argv["video"].split(',')
         p = multiprocessing.Pool()
