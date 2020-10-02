@@ -13,4 +13,8 @@ will launch the script for a 900 by 741px image named imag.png located in the cu
 If you wish to use several video feeds/file, you must set the <code>-m</code> option to <code>True</code> and  with the <code>-v</code> option, separate the path to the videos with commas (<code>,</code>) : <code>rtsp://80.60.167.150:554/video,/this/is/another/path</code>
 
 
-Instead of saving the hist need to save dataframe to edit with dash
+Hist data is saved as csv -> need to format it so it is usable with something like dash to be displayed on front side.
+Dropdown -> Selection par date -> Parse nom de dossier par date
+Affichage mozaique de photos suivant date -> onClick(() => display hist)
+
+Eventuellement ajouter coordonnees defaut etc.
