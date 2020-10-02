@@ -35,7 +35,7 @@ def arg_parser():
     parser.add_argument('-s', '--speed', type=int,
                        required=True,
                        help="Production line speed in m/min. Integer.")
-    parser.add_argument('-m', '--multi', type=bool,
+    parser.add_argument('-m', '--multi',
                        default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
 
     argv = vars(parser.parse_args())
@@ -98,15 +98,13 @@ def video_comp(cam_num):
             (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
             diff = (diff * 255).astype("uint8")
             del(frame_gray)
-            #Score goes from -1 to 1 with 1 being 2 identical images
-            #Diff contains the image difference between video and reference
+
             if score < 0.9:
                 print("Flaw detected with a score of: {}".format(round(score, 5)))
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cnts = imutils.grab_contours(cnts)
 
-                #Drawing rectangle arround difference
                 for i in cnts:
                     (x, y, w, h) = cv2.boundingRect(i)
                     aspect_ratio = float(w)/h
@@ -115,7 +113,6 @@ def video_comp(cam_num):
                     contours_circles.append(i)
                     counting = len(contours_circles)
             
-                #Creating histogram
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
                 plt.title('Grayscale Histogram')
                 plt.ylabel('Intensity')
@@ -167,8 +164,7 @@ try:
     print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
     argv = arg_parser()
     
-
-    if argv["multi"] == True:
+    if argv["multi"] == "True":
         argv["video"] = argv["video"].split(',')
         p = multiprocessing.Pool()
         p.map(video_comp,argv["video"])
