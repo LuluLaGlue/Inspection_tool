@@ -5,17 +5,17 @@
 # 30 - 09 - 2020
 # Version @0.9
 
-import cv2
-import imutils
-import argparse
 import os
 import sys
+import cv2
 import time
-import multiprocessing
+import imutils
+import argparse
 import numpy as np
+import multiprocessing
 from datetime import datetime
-from skimage.metrics import structural_similarity
 from matplotlib import pyplot as plt
+from skimage.metrics import structural_similarity
 
 def error_message(message):
     print('# ------------- ERROR ------------- #')
@@ -60,23 +60,23 @@ def arg_parser():
     parser.add_argument('-v', '--video',
                         required=True,
                         help="Path to video feed, if several feeds : feed1,feed2,feed3")
-    parser.add_argument('-s', '--size',
+    parser.add_argument('-d', '--dimension',
                         required=True,
-                        help="sizes of the reference image or video feed: width,height")
-    parser.add_argument('-d', '--destination',
+                        help="dimensions of the reference image or video feed: width,height")
+    parser.add_argument('-f', '--folder',
                        required=True,
                        help="Path to the folder in which to save resulting images")
-    parser.add_argument('-m', '--meter', type=int,
+    parser.add_argument('-s', '--speed', type=int,
                        required=True,
                        help="Production line speed in m/min")
 
     argv = vars(parser.parse_args())
-    argv["width"] = int(argv["size"].split(',')[0])
-    argv["height"] = int(argv["size"].split(',')[1])
-    argv.pop('size')
-    argv["meter"] = argv["meter"]/60
-    repository_create(argv["destination"])
-    print("Images will be saved in the "+argv["destination"]+" folder.")
+    argv["width"] = int(argv["dimension"].split(',')[0])
+    argv["height"] = int(argv["dimension"].split(',')[1])
+    argv.pop('dimension')
+    argv["speed"] = argv["speed"]/60
+    repository_create(argv["folder"])
+    print("Images will be saved in the "+argv["folder"]+" folder.")
     return argv
 
 def video_comp(cam_num):
@@ -134,19 +134,19 @@ def video_comp(cam_num):
                 cv2.putText(draw, "Number of defects: " + str(counting), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 
                 date = datetime.now()
-                os.mkdir(argv["destination"] + "/Flaw_"+str(date))
-                cv2.imwrite(argv["destination"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
-                plt.savefig(argv["destination"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
-                print("Image and histogram saved in " + argv["destination"])
+                os.mkdir(argv["folder"] + "/Flaw_"+str(date))
+                cv2.imwrite(argv["folder"]+"/Flaw_"+str(date)+"/Photo_"+str(date)+".png", draw)
+                plt.savefig(argv["folder"]+"/Flaw_"+str(date)+"/Hist_"+str(date)+".png")
+                print("Image and histogram saved in " + argv["folder"])
                 print("# -------------------------------- #")
-                time.sleep(3/argv["meter"]) #3 is the filmed distance of the monitored line
+                time.sleep(3/argv["speed"]) #3 is the filmed distance of the monitored line
 #             cv2.imshow("Video Feed", draw)
 
         capture.release()
         cv2.destroyAllWindows()
 
     except KeyboardInterrupt:
-        keyboard_stop(argv["destination"])
+        keyboard_stop(argv["folder"])
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback_details = {'lineno': exc_traceback.tb_lineno,
@@ -170,6 +170,6 @@ try:
     sys.exit(0)
 except KeyboardInterrupt:
     try:
-        keyboard_stop(argv["destination"])
+        keyboard_stop(argv["folder"])
     except NameError:
         keyboard_stop("destination")
