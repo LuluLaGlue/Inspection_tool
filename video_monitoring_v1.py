@@ -113,12 +113,12 @@ def video_comp(cam_num):
             
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
                 
-                df = pd.DataFrame(tmp_hist)
-                del tmp_hist
-                df = df.transpose()
-                df = df.rename(columns={0: 'y', 1: 'x'})
-                df.set_index('x', inplace=True, drop=True)
-                del df[2]
+#                 df = pd.DataFrame(tmp_hist)
+#                 del tmp_hist
+#                 df = df.transpose()
+#                 df = df.rename(columns={0: 'y', 1: 'x'})
+#                 df.set_index('x', inplace=True, drop=True)
+#                 del df[2]
                 
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
@@ -129,10 +129,10 @@ def video_comp(cam_num):
                 date = datetime.now()
                 os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
                 
-                df.to_csv("{0}/Flaw_{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=True, sep=';')
+#                 df.to_csv("{0}/Flaw_{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=True, sep=';')
                 
                 cv2.imwrite("{0}/Flaw_{1}/Photo_{1}.png".format(argv["folder"], str(date)), draw)
-#                 plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
+                plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
                 print("Image and histogram saved in {}.".format(argv["folder"]))
                 print("# -------------------------------- #")
                 sleep_end = datetime.now()
