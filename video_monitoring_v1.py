@@ -127,12 +127,15 @@ def video_comp(cam_num):
 #                 df.drop(index=['x', 2], inplace=True)
 #                 df = df.transpose()
                 
+                time_flaw = datetime.now()
+                x_width = str(capture.get(3))
+                y_height = str(capture.get(4))
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
                 axes.set_xlim([0, 275])
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
-                cv2.putText(draw, "Number of defects: {}".format(str(counting)), (10, 450), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                cv2.putText(draw, "Number of defects: {}. Time: {}. Width: {}. Height: {}.".format(str(counting), time_flaw, x_width, y_height), (10, 50), font, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
                 date = datetime.now()
                 os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
                 
