@@ -36,7 +36,7 @@ def arg_parser():
                        required=True,
                        help="Production line speed in m/min. Integer.")
     parser.add_argument('-m', '--multi', default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
-    parser.add_argument('-b', "--best_score", type=float, default=1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
+    parser.add_argument('-b', "--best_score", type=float, default=-1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
     argv["height"] = int(argv["dimension"].split(',')[1])
@@ -115,11 +115,12 @@ def video_comp(cam_num):
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
                 
 #                 df = pd.DataFrame(tmp_hist)
-#                 del tmp_hist
 #                 df = df.transpose()
-#                 df = df.rename(columns={0: 'y', 1: 'x'})
+#                 df = df.rename(index={0: 'y', 1: 'x'})
 #                 df.set_index('x', inplace=True, drop=True)
 #                 del df[2]
+#                 df.drop(index=['x', 2], inplace=True)
+#                 df = df.transpose()
                 
                 plt.grid(True, which='both', axis='both', linestyle='--')
                 axes = plt.gca()
@@ -130,10 +131,13 @@ def video_comp(cam_num):
                 date = datetime.now()
                 os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
                 
-#                 df.to_csv("{0}/Flaw_{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=True, sep=';')
-                
+#                 df.to_csv("{0}/Flaw_{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=False, sep=',', float_format='%.0f')
                 cv2.imwrite("{0}/Flaw_{1}/Photo_{1}.png".format(argv["folder"], str(date)), draw)
+#                 test = date.now()
                 plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
+                plt.close()
+#                 test_2 = date.now()
+#                 print('TIME TO SAVE: {}'.format((test_2 - test).total_seconds()))
                 print("Image and histogram saved in {}.".format(argv["folder"]))
                 print("# -------------------------------- #")
                 sleep_end = datetime.now()
@@ -148,21 +152,21 @@ def video_comp(cam_num):
         capture.release()
         cv2.destroyAllWindows()
         raise
-    except Exception as e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback_details = {'lineno': exc_traceback.tb_lineno,
-                            'name': exc_type.__name__,
-                            }
-        del(exc_type, exc_value, exc_traceback)
-        print('# ------------- ERROR ------------- #')
-        print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
-        print("Error type: {}".format(traceback_details["name"]))
-        print('# --------- SCRIPT STOPPED --------- #')
-        tz_end = datetime.now()
-        capture.release()
-        cv2.destroyAllWindows()
-        print("Script stopped: {}".format(str(tz_end)))
-        sys.exit(1)
+#     except Exception as e:
+#         exc_type, exc_value, exc_traceback = sys.exc_info()
+#         traceback_details = {'lineno': exc_traceback.tb_lineno,
+#                             'name': exc_type.__name__,
+#                             }
+#         del(exc_type, exc_value, exc_traceback)
+#         print('# ------------- ERROR ------------- #')
+#         print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
+#         print("Error type: {}".format(traceback_details["name"]))
+#         print('# --------- SCRIPT STOPPED --------- #')
+#         tz_end = datetime.now()
+#         capture.release()
+#         cv2.destroyAllWindows()
+#         print("Script stopped: {}".format(str(tz_end)))
+#         sys.exit(1)
 
 try:
     tz_start = datetime.now()
