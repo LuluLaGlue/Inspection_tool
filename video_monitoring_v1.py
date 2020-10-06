@@ -137,12 +137,17 @@ def video_comp(cam_num):
                 draw = cv2.drawContours(frame, contours_circles, -1, (0, 255, 0), 2)
                 cv2.putText(draw, "Number of defects: {}. Time: {}. Width: {}. Height: {}.".format(str(counting), time_flaw, x_width, y_height), (10, 50), font, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
                 date = datetime.now()
-                os.mkdir("{}/Flaw_{}".format(argv["folder"], str(date)))
+                year = datetime.today().year
+                month = datetime.today().month
+                day = datetime.today().day
+                date_folder = str(year) + '-' + str(month) + '-' + str(day)
+                if not os.path.exists("{}/{}-{}-{}".format(argv["folder"], str(year), str(month), str(day))) or not os.path.isdir("{}/{}-{}-{}".format(argv["folder"], str(year), str(month), str(day))):
+                    os.mkdir("{}/{}-{}-{}".format(argv["folder"], str(year), str(month), str(day)))
                 
-#                 df.to_csv("{0}/Flaw_{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=False, sep=',', float_format='%.0f')
-                cv2.imwrite("{0}/Flaw_{1}/Photo_{1}.png".format(argv["folder"], str(date)), draw)
+#                 df.to_csv("{0}/{1}/Data_{1}.csv".format(argv["folder"], str(date)), index=False, sep=',', float_format='%.0f')
+                cv2.imwrite("{0}/{1}/Photo_{2}.png".format(argv["folder"], date_folder, str(date)), draw)
 #                 test = date.now()
-                plt.savefig("{0}/Flaw_{1}/Hist_{1}.png".format(argv["folder"], str(date)))
+                plt.savefig("{0}/{1}/Hist_{2}.png".format(argv["folder"], date_folder, str(date)))
                 plt.close()
 #                 test_2 = date.now()
 #                 print('TIME TO SAVE: {}'.format((test_2 - test).total_seconds()))
