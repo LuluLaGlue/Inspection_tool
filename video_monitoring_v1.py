@@ -36,7 +36,7 @@ def arg_parser():
                        required=True,
                        help="Production line speed in m/min. Integer.")
     parser.add_argument('-m', '--multi', default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
-    parser.add_argument('-b', "--best_score", type=int, default=1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
+    parser.add_argument('-b', "--best_score", type=float, default=1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
     argv["height"] = int(argv["dimension"].split(',')[1])
