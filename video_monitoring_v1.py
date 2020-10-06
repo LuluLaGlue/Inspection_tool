@@ -98,7 +98,7 @@ def video_comp(cam_num):
             (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
             diff = (diff * 255).astype("uint8")
             del(frame_gray)
-            if score < argv["best_score"]:
+            if score > argv["best_score"]:
                 print("Flaw detected with a score of: {}".format(round(score, 5)))
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
