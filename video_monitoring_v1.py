@@ -36,6 +36,7 @@ def arg_parser():
                        required=True,
                        help="Production line speed in m/min. Integer.")
     parser.add_argument('-m', '--multi', default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
+    parser.add_argument('-b', "--best_score", type=int, default=1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
     argv["height"] = int(argv["dimension"].split(',')[1])
@@ -97,7 +98,7 @@ def video_comp(cam_num):
             (score, diff) = structural_similarity(ref_smooth, frame_smooth, full=True)
             diff = (diff * 255).astype("uint8")
             del(frame_gray)
-            if score < 0.9:
+            if score < argv["best_score"]:
                 print("Flaw detected with a score of: {}".format(round(score, 5)))
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
