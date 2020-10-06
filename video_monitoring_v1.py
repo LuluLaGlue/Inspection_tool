@@ -37,6 +37,7 @@ def arg_parser():
                        help="Production line speed in m/min. Integer.")
     parser.add_argument('-m', '--multi', default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
     parser.add_argument('-b', "--best_score", type=float, default=-1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
+    parser.add_argument('-a', '--area', type=float, help="Define the flaw area to detect, if flaw is bigger than area the script does not detect it. Integer")
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
     argv["height"] = int(argv["dimension"].split(',')[1])
@@ -103,14 +104,18 @@ def video_comp(cam_num):
                 thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cnts = imutils.grab_contours(cnts)
-
+#                 print("Flaw area: ", end='', flush=True)
                 for i in cnts:
                     (x, y, w, h) = cv2.boundingRect(i)
-                    aspect_ratio = float(w)/h
                     area = cv2.contourArea(i)
-    #                 if (area < 18000) & (aspect_ratio < 3.5):
-                    contours_circles.append(i)
-                    counting = len(contours_circles)
+#                     print("Area surface: {} ".format(area), end='\r', flush=True)
+                    if (argv["area"]):
+                        if (area < argv["area"]):
+                            contours_circles.append(i)
+                            counting = len(contours_circles)
+                    elif not argv["area"]:
+                        contours_circles.append(i)
+                        counting = len(contours_circles)
             
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
                 
@@ -138,7 +143,7 @@ def video_comp(cam_num):
                 plt.close()
 #                 test_2 = date.now()
 #                 print('TIME TO SAVE: {}'.format((test_2 - test).total_seconds()))
-                print("Image and histogram saved in {}.".format(argv["folder"]))
+                print("\nImage and histogram saved in {}.".format(argv["folder"]))
                 print("# -------------------------------- #")
                 sleep_end = datetime.now()
                 sleep_time = (3/argv["speed"]) - (sleep_end - sleep_start).total_seconds()
@@ -173,6 +178,7 @@ try:
     print("Script started: {}".format(str(tz_start)))
     print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
     argv = arg_parser()
+    print("Max area is: {}".format(argv["area"]))
     if argv["multi"] == "True":
         argv["video"] = argv["video"].split(',')
         p = multiprocessing.Pool()
