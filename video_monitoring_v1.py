@@ -37,7 +37,7 @@ def arg_parser():
                        help="Production line speed in m/min. Integer.")
     parser.add_argument('-m', '--multi', default=False, help="If more than one camera feed is used, must be set to True. Boolean, Default=False")
     parser.add_argument('-b', "--best_score", type=float, default=-1, help="Define the threshold at which you want to detect flaws, Integer, Default=1")
-    parser.add_argument('-a', '--area', type=float, help="Define the flaw area to detect, if flaw is bigger than area the script does not detect it. Integer")
+    parser.add_argument('-a', '--area', type=float, default=-1, help="Define the maximum flaw area to detect, all area defects bigger than this value will not be detected. Integer")
     argv = vars(parser.parse_args())
     argv["width"] = int(argv["dimension"].split(',')[0])
     argv["height"] = int(argv["dimension"].split(',')[1])
@@ -105,28 +105,27 @@ def video_comp(cam_num):
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cnts = imutils.grab_contours(cnts)
 #                 print("Flaw area: ", end='', flush=True)
+                idx = 0
                 for i in cnts:
-                    (x, y, w, h) = cv2.boundingRect(i)
+                    idx += 1
+                    x, y, w, h = cv2.boundingRect(i)
+                    roi = frame_smooth[y:y + h, x:x + w]
                     area = cv2.contourArea(i)
 #                     print("Area surface: {} ".format(area), end='\r', flush=True)
                     if (argv["area"]):
                         if (area < argv["area"]):
                             contours_circles.append(i)
                             counting = len(contours_circles)
+                            cv2.imwrite(argv["folder"]+str(idx) + '.png', roi) # save each defects
+                            im_rect = cv2.rectangle(frame_smooth, (x, y), (x + w, y + h), (200, 0, 0), 2) # draw rectangle for each defects
+                            cv2.imwrite(argv["folder"]+str(idx) + '.png', im_rect) # save frames witch rectangles for each defects
+
                     elif not argv["area"]:
                         contours_circles.append(i)
                         counting = len(contours_circles)
             
                 tmp_hist = plt.hist(frame_smooth.ravel(), 256, [0, 256], color='red', histtype='step')
-                
-#                 df = pd.DataFrame(tmp_hist)
-#                 df = df.transpose()
-#                 df = df.rename(index={0: 'y', 1: 'x'})
-#                 df.set_index('x', inplace=True, drop=True)
-#                 del df[2]
-#                 df.drop(index=['x', 2], inplace=True)
-#                 df = df.transpose()
-                
+         
                 time_flaw = datetime.now()
                 x_width = str(capture.get(3))
                 y_height = str(capture.get(4))
@@ -189,7 +188,7 @@ try:
     print("Script started: {}".format(str(tz_start)))
     print('# --------------- PRESS CONTROL + C TO STOP SCRIPT --------------- #')
     argv = arg_parser()
-    print("Max area is: {}".format(argv["area"]))
+    print("Max area detected: {}".format(argv["area"]))
     if argv["multi"] == "True":
         argv["video"] = argv["video"].split(',')
         p = multiprocessing.Pool()
