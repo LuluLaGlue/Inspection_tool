@@ -139,7 +139,7 @@ def video_comp(cam_num):
                 date = datetime.now()
                 year = datetime.today().year
                 month = datetime.today().month
-                day = datetime.today().day
+                day = datetime.today().day + 1
                 date_folder = str(year) + '-' + str(month) + '-' + str(day)
                 if not os.path.exists("{}/{}-{}-{}".format(argv["folder"], str(year), str(month), str(day))) or not os.path.isdir("{}/{}-{}-{}".format(argv["folder"], str(year), str(month), str(day))):
                     os.mkdir("{}/{}-{}-{}".format(argv["folder"], str(year), str(month), str(day)))
@@ -161,25 +161,28 @@ def video_comp(cam_num):
 
         capture.release()
         cv2.destroyAllWindows()
+        plt.close()
     except KeyboardInterrupt:
         capture.release()
         cv2.destroyAllWindows()
+        plt.close()
         raise
-#     except Exception as e:
-#         exc_type, exc_value, exc_traceback = sys.exc_info()
-#         traceback_details = {'lineno': exc_traceback.tb_lineno,
-#                             'name': exc_type.__name__,
-#                             }
-#         del(exc_type, exc_value, exc_traceback)
-#         print('# ------------- ERROR ------------- #')
-#         print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
-#         print("Error type: {}".format(traceback_details["name"]))
-#         print('# --------- SCRIPT STOPPED --------- #')
-#         tz_end = datetime.now()
-#         capture.release()
-#         cv2.destroyAllWindows()
-#         print("Script stopped: {}".format(str(tz_end)))
-#         sys.exit(1)
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback_details = {'lineno': exc_traceback.tb_lineno,
+                            'name': exc_type.__name__,
+                            }
+        del(exc_type, exc_value, exc_traceback)
+        print('# ------------- ERROR ------------- #')
+        print('Something went wrong on line {}.'.format(str(traceback_details["lineno"])))
+        print("Error type: {}".format(traceback_details["name"]))
+        print('# --------- SCRIPT STOPPED --------- #')
+        tz_end = datetime.now()
+        capture.release()
+        cv2.destroyAllWindows()
+        plt.close()
+        print("Script stopped: {}".format(str(tz_end)))
+        sys.exit(1)
 
 try:
     tz_start = datetime.now()
