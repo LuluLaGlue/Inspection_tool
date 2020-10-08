@@ -116,9 +116,9 @@ def video_comp(cam_num):
                         if (area < argv["area"]):
                             contours_circles.append(i)
                             counting = len(contours_circles)
-                            cv2.imwrite(argv["folder"]+str(idx) + '.png', roi) # save each defects
+                            cv2.imwrite(argv["folder"]+"/"+str(idx) + '.png', roi) # save each defects
                             im_rect = cv2.rectangle(frame_smooth, (x, y), (x + w, y + h), (200, 0, 0), 2) # draw rectangle for each defects
-                            cv2.imwrite(argv["folder"]+str(idx) + '.png', im_rect) # save frames witch rectangles for each defects
+                            cv2.imwrite(argv["folder"]+"/"+str(idx) + '.png', im_rect) # save frames witch rectangles for each defects
 
                     elif not argv["area"]:
                         contours_circles.append(i)
